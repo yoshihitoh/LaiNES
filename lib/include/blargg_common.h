@@ -41,6 +41,7 @@
 	#if _MSC_VER < 1100
 		#define BLARGG_COMPILER_HAS_BOOL 0
 	#endif
+    #define BLARGG_HAS_NOTHROW 0
 
 #elif defined (__GNUC__)
 	// GNU C++
@@ -119,6 +120,10 @@
 	#define STD
 #endif
 
+#ifndef BLARGG_HAS_NOTHROW
+    #define BLARGG_HAS_NOTHROW  1
+#endif
+
 // BOOST::uint8_t, BOOST::int16_t, etc.
 #include "boost/cstdint.hpp"
 
@@ -142,7 +147,11 @@ const blargg_err_t blargg_success = 0;
 // BLARGG_NEW is used in place of 'new' to create objects. By default,
 // nothrow new is used.
 #ifndef BLARGG_NEW
-	#define BLARGG_NEW new (STD::nothrow)
+    #if BLARGG_HAS_NOTHROW
+        #define BLARGG_NEW new (STD::nothrow)
+    #else
+        #define BLARGG_NEW new
+    #endif
 #endif
 
 // BLARGG_BIG_ENDIAN and BLARGG_LITTLE_ENDIAN
@@ -174,6 +183,27 @@ const blargg_err_t blargg_success = 0;
 		#define BLARGG_CPU_X86 1
 	
 	#endif
+#endif
+
+#include <sys/stat.h>
+#ifndef S_IRWXU
+    #define S_IRWXU 0x000700
+#endif
+
+#ifndef S_IRGRP
+    #define S_IRGRP 0x000040
+#endif
+
+#ifndef S_IXGRP
+    #define S_IXGRP 0x000010
+#endif
+
+#ifndef S_IROTH
+    #define S_IROTH 0x000004
+#endif
+
+#ifndef S_IXOTH
+    #define S_IXOTH 0x000001
 #endif
 
 #endif

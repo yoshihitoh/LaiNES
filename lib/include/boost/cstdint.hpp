@@ -16,6 +16,8 @@ BLARGG_BEGIN_NAMESPACE( boost )
 #   error "No suitable 8-bit type available"
 #endif
 
+#ifndef _STDINT
+
 typedef unsigned char   uint8_t;
 typedef signed char     int8_t;
 
@@ -35,6 +37,8 @@ typedef unsigned short  uint16_t;
 #else
 #   error "No suitable 32-bit type available"
 #endif
+
+#endif // _STDINT
 
 BLARGG_END_NAMESPACE
 

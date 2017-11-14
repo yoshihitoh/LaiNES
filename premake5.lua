@@ -6,23 +6,21 @@ function set_preferred_location()
 end
 
 workspace 'LaiNES'
-    set_preferred_location {}
     configurations { 'Debug', 'Release' }
+    targetdir 'bin/x86'
+    debugdir '.'
 
     filter 'configurations:Debug'
         defines { 'DEBUG' }
         symbols 'On'
-        targetdir '.'
         targetsuffix '_debug'
 
     filter 'configurations:Release'
         defines { 'NDEBUG' }
         optimize 'On'
-        targetdir '.'
         targetsuffix '_release'
 
-    filter 'platforms:Windows'
-        system 'windows'
+    set_preferred_location {}
 
 project 'LaiNES'
     kind 'WindowedApp'
@@ -38,6 +36,10 @@ project 'LaiNES'
         'lib/**/*.cpp',
     }
 
+    removefiles {
+        'src/porting/**.cpp',
+    }
+
     includedirs {
         'simpleini',
         'lib/include',
@@ -51,10 +53,32 @@ project 'LaiNES'
     }
 
     filter 'action:vs*'
+        toolset "msc-llvm-vs2014"
+
         files {
             '**/*.h',
             '**/*.hpp',
+            'src/porting/windows/**.h',
+            'src/porting/windows/**.hpp',
+            'src/porting/windows/**.cpp',
+        }
+
+        includedirs {
+            'third_party/sdl2/include',
+        }
+
+        libdirs {
+            'third_party/sdl2/lib/x86',
+        }
+
+        links {
+            'SDL2main',
         }
 
     filter 'action:gmake*'
         buildoptions { '-std=c++14' }
+
+        files {
+            'src/porting/unix/**.hpp',
+            'src/porting/unix/**.cpp',
+        }

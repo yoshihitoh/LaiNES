@@ -1,7 +1,6 @@
-#include <dirent.h>
-#include <unistd.h>
 #include "cartridge.hpp"
 #include "menu.hpp"
+#include "porting/directory.hpp"
 
 namespace GUI {
 
@@ -100,20 +99,17 @@ void FileMenu::change_dir(string dir)
 {
     clear();
 
-    struct dirent* dirp;
-    DIR* dp = opendir(dir.c_str());
+    auto directory = PORTING::GetDirectoryFor(dir.c_str());
+    directory->ForEachItems([this, &dir](const PORTING::DirectoryItem& dir_item) {
+        const auto& name = dir_item.name;
+        const auto path = dir + "/" + name;
 
-    while ((dirp = readdir(dp)) != NULL)
-    {
-        string name = dirp->d_name;
-        string path = dir + "/" + name;
+        if (name[0] == '.' and name != "..") return;
 
-        if (name[0] == '.' and name != "..") continue;
-
-        if (dirp->d_type == DT_DIR)
+        if (dir_item.IsDirectory())
         {
             add(new Entry(name + "/",
-                          [=]{ change_dir(path); },
+                          [=] { change_dir(path); },
                           0));
         }
         else if (name.size() > 4 and name.substr(name.size() - 4) == ".nes")
@@ -122,15 +118,13 @@ void FileMenu::change_dir(string dir)
                           [=]{ Cartridge::load(path.c_str()); toggle_pause(); },
                           0));
         }
-    }
-    closedir(dp);
+    });
 }
 
 FileMenu::FileMenu()
 {
-    char cwd[512];
-
-    change_dir(getcwd(cwd, 512));
+    auto working_dir = PORTING::GetWorkingDirectory();
+    change_dir(working_dir->GetRootPath());
 }
 
 

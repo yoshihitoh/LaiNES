@@ -2,5 +2,6 @@
 laines
 *.o
 
+bin/
 build_*/
 LaiNES_*

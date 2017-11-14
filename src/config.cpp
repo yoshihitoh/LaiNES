@@ -2,6 +2,7 @@
 #include <SimpleIni.h>
 #include "config.hpp"
 #include "gui.hpp"
+#include "porting/directory.hpp"
 
 namespace GUI {
 
@@ -31,7 +32,6 @@ int BTN_START [] = { -1, -1 };
 bool useJoystick[] = { false, false };
 
 
-
 /* Ensure config directory exists */
 const char* get_config_path(char * buf, int buflen)
 {
@@ -51,7 +51,7 @@ const char* get_config_path(char * buf, int buflen)
     snprintf(homepath, sizeof(homepath), "%s/.config", home);
 
     /* Then, .config as a folder */
-    int res = mkdir(homepath, CONFIG_DIR_DEFAULT_MODE);
+    int res = PORTING::MakeDirectory(homepath, CONFIG_DIR_DEFAULT_MODE);
     int err = errno;
 
     if (res == -1 && err != EEXIST)
@@ -60,7 +60,7 @@ const char* get_config_path(char * buf, int buflen)
     snprintf(path, sizeof(path), "%s/%s", homepath, CONFIG_DIR_NAME);
 
     /* Finally, CONFIG_DIR_NAME as a sub-folder */
-    res = mkdir(path, CONFIG_DIR_DEFAULT_MODE);
+    res = PORTING::MakeDirectory(homepath, CONFIG_DIR_DEFAULT_MODE);
     err = errno;
 
     if (res == -1 && err != EEXIST)
