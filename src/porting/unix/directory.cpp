@@ -1,55 +1,96 @@
-#pragma once
-
-
 #include <dirent.h>
 #include <unistd.h>
+#include <sys/stat.h>
+#include "porting/directory.hpp"
 
 
 namespace PORTING {
 
-// TODO: add unix implementation
+namespace {
 
-#if 0
 struct DirentResource
 {
     DIR* p_dir;
-    DirentResource(const char* dir_path)
-        : p_dir(opendir(dir_path))
-    {
-    }
-
-    ~DirentResource()
-    {
-        if (p_dir != nullptr) {
-            closedir(p_dir);
-        }
-    }
+    DirentResource(const char* dir_path);
+    ~DirentResource();
 };
 
 
-static void ForEachDirEntries(const char* root_path, const Directory::EntryHandler& entry_handler)
+class UnixDirectory : public Directory
 {
-    DirentResource dirent_resource(root_path);
+public:
+    explicit UnixDirectory(const char* dir_path);
+    const char* GetRootPath() const override;
+    void ForEachItems(const DirectoryItemHandler& handler) const override;
+
+private:
+    std::string dir_path_;
+};
+
+}
+
+
+DirentResource::DirentResource(const char* dir_path)
+    : p_dir(opendir(dir_path))
+{
+}
+
+
+DirentResource::~DirentResource()
+{
+    if (p_dir != nullptr) {
+        closedir(p_dir);
+    }
+}
+
+
+
+UnixDirectory::UnixDirectory(const char* dir_path)
+    : dir_path_(dir_path)
+{
+}
+
+
+const char* UnixDirectory::GetRootPath() const
+{
+    return dir_path_.c_str();
+}
+
+
+void UnixDirectory::ForEachItems(const DirectoryItemHandler& handler) const
+{
+    DirentResource dirent_resource(GetRootPath());
 
     struct dirent* p_dirent;
     while ((p_dirent = readdir(dirent_resource.p_dir)) != NULL)
     {
-        std::string name = dirp->d_name;
-        auto dir_entry = dirp->d_type == DT_DIR
-            ? DirectoryEntry::Directory(name.c_str())
-            : DirectoryEntry::File(name.c_str());
+        const auto item_type = p_dirent->d_type == DT_DIR
+            ? DirectoryItemType::DIRECTORY
+            : DirectoryItemType::FILE;
 
-        entry_handler(dir_entry);
+        const DirectoryItem dir_item{ item_type, p_dirent->d_name };
+        handler(dir_item);
     }
 }
 
 
-static std::string GetWorkingDirectory()
+int MakeDirectory(const char* dir_path, int mode)
 {
-    char path_buff[512 + 1] = {};
-    return std::string(getcwd(path_buff, 512));
+    return mkdir(dir_path, mode);
 }
-#endif
+
+
+std::unique_ptr<Directory> GetDirectoryFor(const char* root_path)
+{
+    return std::unique_ptr<Directory>(std::make_unique<UnixDirectory>(root_path));
+}
+
+
+std::unique_ptr<Directory> GetWorkingDirectory()
+{
+    char path[512] = {};
+    return GetDirectoryFor(getcwd(path, 512));
+}
 
 
 }
