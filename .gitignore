@@ -1,7 +1,11 @@
+.idea/
+
 .sconsign.dblite
 laines
 *.o
 
 bin/
 build_*/
+build/
+cmake-build-*/
 LaiNES_*
